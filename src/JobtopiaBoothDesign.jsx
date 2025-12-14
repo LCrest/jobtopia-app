@@ -56,13 +56,14 @@ const JobtopiaBoothDesign = () => {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Lower, warmer click sound - more like a soft tap
-      oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+      // Punchier click sound with better audibility
+      oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.05);
+      gainNode.gain.setValueAtTime(1.0, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.08);
+      oscillator.stop(audioContext.currentTime + 0.12);
     } catch (e) {
       // Silently fail if audio context issues
     }
@@ -124,7 +125,7 @@ const JobtopiaBoothDesign = () => {
     const animate = () => {
       animationId = requestAnimationFrame(animate);
       if (boothRef.current) {
-        boothRef.current.rotation.y += 0.003;
+        boothRef.current.rotation.y += 0.009;
       }
       renderer.render(scene, camera);
     };
@@ -155,17 +156,64 @@ const JobtopiaBoothDesign = () => {
     backWall.castShadow = true;
     boothGroup.add(backWall);
 
-    // Side walls
+    // Side walls with windows
     const sideWallGeometry = new THREE.BoxGeometry(0.1, 2.5, 3);
-    const leftWall = new THREE.Mesh(sideWallGeometry, backWallMaterial);
-    leftWall.position.set(-1.5, 1.25, 0);
-    leftWall.castShadow = true;
-    boothGroup.add(leftWall);
+    
+    // Left wall - split into sections with a window
+    const leftWallBottom = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 0.8, 3),
+      backWallMaterial
+    );
+    leftWallBottom.position.set(-1.5, 0.4, 0);
+    leftWallBottom.castShadow = true;
+    boothGroup.add(leftWallBottom);
 
-    const rightWall = new THREE.Mesh(sideWallGeometry, backWallMaterial);
-    rightWall.position.set(1.5, 1.25, 0);
-    rightWall.castShadow = true;
-    boothGroup.add(rightWall);
+    const leftWallTop = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 0.8, 3),
+      backWallMaterial
+    );
+    leftWallTop.position.set(-1.5, 2.1, 0);
+    leftWallTop.castShadow = true;
+    boothGroup.add(leftWallTop);
+
+    // Left window frame
+    const windowMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x88ccff, 
+      transparent: true, 
+      opacity: 0.3,
+      side: THREE.DoubleSide
+    });
+    const leftWindow = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.9, 2.4),
+      windowMaterial
+    );
+    leftWindow.position.set(-1.5, 1.25, 0);
+    boothGroup.add(leftWindow);
+
+    // Right wall - split into sections with a window
+    const rightWallBottom = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 0.8, 3),
+      backWallMaterial
+    );
+    rightWallBottom.position.set(1.5, 0.4, 0);
+    rightWallBottom.castShadow = true;
+    boothGroup.add(rightWallBottom);
+
+    const rightWallTop = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 0.8, 3),
+      backWallMaterial
+    );
+    rightWallTop.position.set(1.5, 2.1, 0);
+    rightWallTop.castShadow = true;
+    boothGroup.add(rightWallTop);
+
+    // Right window
+    const rightWindow = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.9, 2.4),
+      windowMaterial
+    );
+    rightWindow.position.set(1.5, 1.25, 0);
+    boothGroup.add(rightWindow);
 
     // Top banner
     const bannerGeometry = new THREE.BoxGeometry(3, 0.4, 0.1);
@@ -218,6 +266,32 @@ const JobtopiaBoothDesign = () => {
     rightMonitor.position.set(0.5, 0.95, 1);
     rightMonitor.rotation.x = -0.2;
     boothGroup.add(rightMonitor);
+
+    // Add two people sitting at the booth
+    // Person 1 (left side)
+    const person1Body = new THREE.CylinderGeometry(0.15, 0.2, 0.6, 8);
+    const personMaterial = new THREE.MeshStandardMaterial({ color: 0x3b82f6 }); // Blue shirt
+    const person1 = new THREE.Mesh(person1Body, personMaterial);
+    person1.position.set(-0.6, 0.3, 1.5);
+    boothGroup.add(person1);
+
+    // Person 1 head
+    const headGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+    const skinMaterial = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+    const person1Head = new THREE.Mesh(headGeometry, skinMaterial);
+    person1Head.position.set(-0.6, 0.75, 1.5);
+    boothGroup.add(person1Head);
+
+    // Person 2 (right side)
+    const person2Material = new THREE.MeshStandardMaterial({ color: 0xec4899 }); // Pink shirt
+    const person2 = new THREE.Mesh(person1Body, person2Material);
+    person2.position.set(0.6, 0.3, 1.5);
+    boothGroup.add(person2);
+
+    // Person 2 head
+    const person2Head = new THREE.Mesh(headGeometry, skinMaterial);
+    person2Head.position.set(0.6, 0.75, 1.5);
+    boothGroup.add(person2Head);
 
     boothGroup.castShadow = true;
     scene.add(boothGroup);
@@ -322,7 +396,6 @@ const JobtopiaBoothDesign = () => {
 
                 <div 
                   className="bg-gradient-to-br from-green-200 to-green-100 rounded-2xl p-6 shadow-lg hover-shadow transition-all cursor-pointer"
-                  onClick={playClickSound}
                 >
                   <div className="w-12 h-12 bg-green-300 rounded-full flex items-center justify-center mb-4 mx-auto">
                     <Tent className="w-6 h-6" />
@@ -330,13 +403,13 @@ const JobtopiaBoothDesign = () => {
                   <h3 className="text-lg font-bold text-center mb-2">Booth Management</h3>
                   <div className="flex gap-2">
                     <button 
-                      onClick={() => { setCurrentStep(2); playClickSound(); }}
+                      onClick={(e) => { e.stopPropagation(); setCurrentStep(2); playClickSound(); }}
                       className="flex-1 bg-green-200 hover:bg-green-300 text-black font-semibold py-2 px-3 rounded-full text-sm transition-all hover-shadow"
                     >
                       Create Booth
                     </button>
                     <button 
-                      onClick={playClickSound}
+                      onClick={(e) => { e.stopPropagation(); playClickSound(); }}
                       className="flex-1 bg-green-200 hover:bg-green-300 text-black font-semibold py-2 px-3 rounded-full text-sm transition-all hover-shadow"
                     >
                       Manage Booth
