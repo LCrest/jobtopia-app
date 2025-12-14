@@ -45,6 +45,11 @@ const JobtopiaBoothDesign = () => {
   const playClickSound = useCallback(() => {
     if (!audioContext) return;
     try {
+      // Resume audio context if it's suspended (browser autoplay policy)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
